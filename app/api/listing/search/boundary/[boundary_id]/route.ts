@@ -7,7 +7,7 @@ type BoundaryParams = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: BoundaryParams }
+  { params }: { params: Promise<BoundaryParams> }
 ) {
   if (request.nextUrl.searchParams.toString() === '') {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })

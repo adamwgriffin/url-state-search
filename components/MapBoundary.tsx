@@ -1,5 +1,5 @@
 import type { PolygonPaths } from '~/types'
-import { useMap } from '@vis.gl/react-google-maps'
+import { useGoogleMaps } from '~/providers/GoogleMapsProvider'
 
 export type MapBoundaryProps = {
   paths: PolygonPaths | null
@@ -14,10 +14,10 @@ export function MapBoundary ({
   visible = true,
   options = {}
 }: MapBoundaryProps) {
-  const map = useMap()
+  const { googleMap } = useGoogleMaps()
 
   polygon ||= new google.maps.Polygon()
-  polygon.setMap(map)
+  polygon.setMap(googleMap)
   if (paths) polygon.setPaths(paths)
   polygon.setOptions({ ...options, visible })
 

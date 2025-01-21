@@ -1,6 +1,8 @@
 import { SearchResults } from '~/components/SearchResults'
-import { ListingMap } from '~/components/ListingMap'
+import ListingMapNoSSR from '~/components/ListingMapNoSSR'
+import ListingMarkersNoSSR from '~/components/ListingMarkersNoSSR'
 import { SearchHeader } from '~/components/SearchHeader'
+import { Suspense } from 'react'
 
 export default async function Home() {
   return (
@@ -8,10 +10,17 @@ export default async function Home() {
       <SearchHeader />
       <div className='grid grid-cols-2 h-full min-h-0 min-w-0'>
         <div className='p-4 overflow-y-auto'>
-          <SearchResults />
+          <Suspense>
+            <SearchResults />
+          </Suspense>
         </div>
         <div className='p-4'>
-          <ListingMap />
+          <Suspense>
+            <ListingMapNoSSR />
+          </Suspense>
+          <Suspense>
+            <ListingMarkersNoSSR />
+          </Suspense>
         </div>
       </div>
     </main>
