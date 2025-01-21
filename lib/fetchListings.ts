@@ -31,7 +31,7 @@ async function searchCurrentLocation(params: URLParams) {
 
 export async function fetchListings(searchParams: ReadonlyURLSearchParams) {
   if (searchParams.size === 0) return null
-  const params = Object.fromEntries(searchParams.entries())
+  const params = omit(Object.fromEntries(searchParams.entries()), 'test')
   return params.bounds_north
     ? await searchCurrentLocation(params)
     : await searchNewLocation(params)

@@ -3,18 +3,26 @@
 import { useMemo } from 'react'
 import { useSearchResults } from '~/hooks/useSearchResults'
 import ListingMarker from './ListingMarker'
-import { useGoogleMaps } from '~/providers/GoogleMapsProvider'
-export default function ListingMarkers() {
-  const { googleLoaded } = useGoogleMaps()
-  const { data: results } = useSearchResults()
-  const listings = useMemo(() => results?.listings || [], [results?.listings])
+import pick from 'lodash/pick'
 
-  if (!googleLoaded) return null
+export default function ListingMarkers() {
+  const { data } = useSearchResults()
+  const listingsMemoized = useMemo(() => {
+    return (data?.listings || []).map((listing) =>
+      pick(listing, ['_id', 'latitude', 'longitude', 'listPrice', 'soldPrice'])
+    )
+  }, [data?.listings])
 
   return (
     <>
-      {listings.map((listing) => (
-        <ListingMarker key={listing._id} listing={listing} />
+      {listingsMemoized.map((listing) => (
+        <ListingMarker
+          key={listing._id}
+          latitude={listing.latitude}
+          longitude={listing.longitude}
+          listPrice={listing.listPrice}
+          soldPrice={listing.soldPrice}
+        />
       ))}
     </>
   )

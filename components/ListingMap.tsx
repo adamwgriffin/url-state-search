@@ -16,6 +16,8 @@ import GoogleMap from './GoogleMap'
 
 let userAdjustedMap = false
 
+let previousZoom: number | null = null
+
 function handleDragend() {
   userAdjustedMap = true
 }
@@ -65,11 +67,14 @@ export default function ListingMap() {
   if (!googleLoaded) return
 
   if (zoom) {
-    googleMap?.setZoom(zoom)
+    if (zoom !== previousZoom) {
+      googleMap?.setZoom(zoom)
+    }
+    previousZoom = zoom
   }
 
   if (bounds) {
-    googleMap?.fitBounds(bounds)
+    // googleMap?.fitBounds(bounds)
   }
 
   return (

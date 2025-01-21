@@ -11,6 +11,7 @@ export function useUpdateFilters() {
   return function (newParams: URLParams) {
     const mergedParams = { ...Object.fromEntries(searchParams), ...newParams }
     const nonEmptyparams = omitBy(mergedParams, (value) => !value)
+    nonEmptyparams.test = Date.now().toString()
     const updatedQueryString = objectToQueryString(nonEmptyparams)
     const url =
       updatedQueryString === '' ? pathname : `${pathname}?${updatedQueryString}`

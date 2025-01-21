@@ -1,28 +1,25 @@
 'use client'
 
-import { type Listing } from '~/types'
+import { useGoogleMaps } from '~/providers/GoogleMapsProvider'
 import { formatPriceAbbreviated } from '~/lib/listingHelpers'
 import { memo, useCallback, useEffect, useState } from 'react'
-import get from 'lodash/get'
-import { useGoogleMaps } from '~/providers/GoogleMapsProvider'
 import { createPortal } from 'react-dom'
 
 export type ListingMarkerProps = {
-  listing: Listing
+  latitude: number
+  longitude: number
+  listPrice: number
+  soldPrice: number | null | undefined
 }
 
-export const listingLocationToLatLngLiteral = (
-  listing: Listing
-): google.maps.LatLngLiteral => {
-  return {
-    lat: listing?.latitude,
-    lng: listing?.longitude
-  }
-}
-
-function ListingMarker({ listing }: ListingMarkerProps) {
-  // console.log(`ListingMarker for ${listing._id}`)
-  const { googleMap } = useGoogleMaps()
+function ListingMarker({
+  latitude,
+  longitude,
+  listPrice,
+  soldPrice
+}: ListingMarkerProps) {
+  console.log(`ListingMarker rendering ${latitude}/${longitude}`)
+  const { googleMap, googleLoaded } = useGoogleMaps()
   const [markerContainer, setMarkerContainer] = useState<HTMLDivElement | null>(
     null
   )
@@ -33,11 +30,14 @@ function ListingMarker({ listing }: ListingMarkerProps) {
     ): google.maps.marker.AdvancedMarkerElement => {
       return new google.maps.marker.AdvancedMarkerElement({
         map: googleMap,
-        position: listingLocationToLatLngLiteral(listing),
+        position: {
+          lat: latitude,
+          lng: longitude
+        },
         content: markerContainer
       })
     },
-    [googleMap, listing]
+    [googleMap, latitude, longitude]
   )
 
   useEffect(() => {
@@ -51,7 +51,11 @@ function ListingMarker({ listing }: ListingMarkerProps) {
     }
   }, [createMarker, googleMap])
 
-  if (markerContainer === null) return
+  if (googleLoaded === false) return null
+
+  if (googleMap === null) return null
+
+  if (markerContainer === null) return null
 
   return createPortal(
     <div
@@ -62,32 +66,22 @@ function ListingMarker({ listing }: ListingMarkerProps) {
         font-medium bg-white text-black dark:bg-gray-600 dark:text-white
         '
     >
-      {formatPriceAbbreviated(listing.soldPrice || listing.listPrice)}
+      {formatPriceAbbreviated(soldPrice || listPrice)}
     </div>,
     markerContainer
   )
 }
 
-export const objectsValuesEqual = (
-  obj1: object,
-  obj2: object,
-  attrs: string[]
-): boolean => {
-  return attrs.every((attr) => {
-    return get(obj1, attr) === get(obj2, attr)
-  })
-}
-
 // Don't re-render the marker if all of these conditions are true
-const propsAreEqual = (
-  prevProps: Readonly<ListingMarkerProps>,
-  nextProps: Readonly<ListingMarkerProps>
-) => {
-  return objectsValuesEqual(prevProps, nextProps, [
-    'listing._id',
-    'listing.latitude',
-    'listing.longitude'
-  ])
-}
+// const propsAreEqual = (
+//   prevProps: Readonly<ListingMarkerProps>,
+//   nextProps: Readonly<ListingMarkerProps>
+// ) => {
+//   console.log('propsAreEqual running.')
+//   return (
+//     prevProps.latitude === nextProps.latitude &&
+//     prevProps.longitude === nextProps.longitude
+//   )
+// }
 
-export default memo(ListingMarker, propsAreEqual)
+export default memo(ListingMarker)
