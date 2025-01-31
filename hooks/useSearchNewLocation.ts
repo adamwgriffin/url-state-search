@@ -11,6 +11,7 @@ export function useSearchNewLocation() {
   const searchParams = useSearchParams()
 
   return function (address: string) {
+    if (!address) return
     // Remove params for searching current location with a geospatial search
     // since we're now going to be geocoding a new location. We no only want
     // filter params.

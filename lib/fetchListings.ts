@@ -2,6 +2,23 @@ import omit from 'lodash/omit'
 import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { http } from '~/lib/http'
 import type { ListingSearchResponse, URLParams } from '~/types'
+import {
+  type GeocodeBoundaryQueryParams,
+  geocodeBoundaryQuerySchema
+} from '~/zod_schemas/geocodeBoundarySearchSchema'
+import {
+  type BoundarySearchQueryParams,
+  boundarySearchQuerySchema
+} from '~/zod_schemas/boundarySearchRequestSchema'
+import {
+  type BoundsSearchQueryParams,
+  boundsSearchQuerySchema
+} from '~/zod_schemas/boundsSearchRequestSchema'
+
+export type ListingServiceRequest =
+  | GeocodeBoundaryQueryParams
+  | BoundarySearchQueryParams
+  | BoundsSearchQueryParams
 
 function removeNonListingServiceParams(params: URLParams) {
   return omit(params, 'bounds', 'boundary_id', 'zoom')
@@ -31,22 +48,40 @@ function paramsForGeospatialSearch(params: URLParams) {
   return { ...newParams, ...listingServiceBounds }
 }
 
-async function getListings<T>(endpoint: string, params: URLParams) {
+async function getListings<T>(endpoint: string, params: ListingServiceRequest) {
   return http<T>(`/api/listing/search/${endpoint}`, params)
 }
 
 async function searchNewLocation(params: URLParams) {
-  return getListings<ListingSearchResponse>(
-    'geocode',
+  const result = geocodeBoundaryQuerySchema.safeParse(
     removeNonListingServiceParams(params)
   )
+  if (result.success) {
+    return getListings<ListingSearchResponse>('geocode', result.data)
+  }
+  console.warn(
+    'Error parsing params for listing search. Cancelling request.',
+    result.error
+  )
+  return {} // ReactQuery complains if we don't return a value
 }
 
 async function searchCurrentLocation(params: URLParams) {
-  return getListings<ListingSearchResponse>(
-    params.boundary_id ? `boundary/${params.boundary_id}` : 'bounds',
-    paramsForGeospatialSearch(params)
+  const requestParams = paramsForGeospatialSearch(params)
+  const result = params.boundary_id
+    ? boundarySearchQuerySchema.safeParse(requestParams)
+    : boundsSearchQuerySchema.safeParse(requestParams)
+  if (result.success) {
+    return getListings<ListingSearchResponse>(
+      params.boundary_id ? `boundary/${params.boundary_id}` : 'bounds',
+      result.data
+    )
+  }
+  console.warn(
+    'Error parsing params for listing search. Cancelling request.',
+    result.error
   )
+  return {}
 }
 
 export async function fetchListings(searchParams: ReadonlyURLSearchParams) {
